@@ -103,6 +103,33 @@ export async function updateAiSettings(input: {
   revalidatePath("/profile");
 }
 
+export async function getProviderModels(provider: string): Promise<string[]> {
+  const url =
+    provider === "kilo"
+      ? "https://api.kilo.ai/api/gateway/v1/models"
+      : provider === "openrouter"
+      ? "https://openrouter.ai/api/v1/models"
+      : null;
+  if (!url) return [];
+  try {
+    const res = await fetch(url, { headers: { "Content-Type": "application/json" } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items: any[] = Array.isArray(json) ? json : (json.data ?? []);
+    const free = items.filter((m) => {
+      if (m.isFree === true) return true;
+      const id = String(m.id ?? "");
+      if (id.endsWith(":free")) return true;
+      if (id === "openrouter/free" || id === "kilo-auto/free") return true;
+      const p = m.pricing?.prompt;
+      const c = m.pricing?.completion;
+      return (p === "0" || p === 0) && (c === "0" || c === 0);
+    });
+    return free.map((m) => String(m.id)).sort();
+  } catch {
+    return [];
+  }
+}
 export async function getAiConfig(userId: number): Promise<{
   baseUrl: string;
   model: string;

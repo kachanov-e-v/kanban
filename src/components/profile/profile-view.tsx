@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateProfile, updateAiSettings } from "@/lib/actions/profile";
+import { updateProfile, updateAiSettings, getProviderModels } from "@/lib/actions/profile";
 import type { ProfileDTO } from "@/lib/actions/profile";
 
 export function ProfileView({ initial }: { initial: ProfileDTO }) {
@@ -17,6 +17,8 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
   const [profilePending, startProfile] = useTransition();
 
   const [aiProvider, setAiProvider] = useState(initial.aiProvider);
+  const [aiModels, setAiModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
   const [aiBaseUrl, setAiBaseUrl] = useState(initial.aiBaseUrl);
   const [aiModel, setAiModel] = useState(initial.aiModel);
   const [aiApiKey, setAiApiKey] = useState(initial.aiApiKey);
@@ -24,6 +26,25 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
   const [aiMsg, setAiMsg] = useState<string | null>(null);
   const [aiErr, setAiErr] = useState<string | null>(null);
   const [aiPending, startAi] = useTransition();
+
+  useEffect(() => {
+    if (aiProvider === "custom") {
+      setAiModels([]);
+      return;
+    }
+    let cancelled = false;
+    setModelsLoading(true);
+    getProviderModels(aiProvider)
+      .then((m) => {
+        if (!cancelled) setAiModels(m);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [aiProvider]);
 
   function saveProfile() {
     setProfileMsg(null);
@@ -104,24 +125,39 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
             <option value="custom">Свой (custom)</option>
           </select>
         </div>
-        <Input
-          label="Base URL (переопределение, необязательно)"
-          placeholder={
-            aiProvider === "kilo"
-              ? "https://api.kilo.ai/api/gateway/v1/chat/completions"
-              : aiProvider === "openrouter"
-              ? "https://openrouter.ai/api/v1/chat/completions"
-              : "https://text.pollinations.ai/openai"
-          }
-          value={aiBaseUrl}
-          onChange={(e) => setAiBaseUrl(e.target.value)}
-        />
-        <Input
-          label="Модель"
-          placeholder="openai"
-          value={aiModel}
-          onChange={(e) => setAiModel(e.target.value)}
-        />
+        {aiProvider === "custom" && (
+          <Input
+            label="Base URL (полный endpoint)"
+            placeholder="https://api.openai.com/v1/chat/completions"
+            value={aiBaseUrl}
+            onChange={(e) => setAiBaseUrl(e.target.value)}
+          />
+        )}
+        {aiProvider !== "custom" ? (
+          <div className="flex flex-col gap-1">
+            <label className="type-label-large text-on-surface-variant">Модель (free)</label>
+            <select
+              value={aiModel}
+              onChange={(e) => setAiModel(e.target.value)}
+              disabled={modelsLoading}
+              className="h-12 px-4 type-body-large rounded-radius-sm bg-surface border-[3px] border-outline text-on-surface focus:outline-none focus:border-primary"
+            >
+              <option value="">{modelsLoading ? "Загрузка..." : "Выберите модель"}</option>
+              {aiModels.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <Input
+            label="Модель"
+            placeholder="openai"
+            value={aiModel}
+            onChange={(e) => setAiModel(e.target.value)}
+          />
+        )}
         <Input
           label="API ключ"
           type="password"
