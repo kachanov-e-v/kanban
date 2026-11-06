@@ -72,15 +72,15 @@ export function ChatPanel({ boardId }: { boardId: number }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary border-[3px] border-outline shadow-level3 hover:-translate-y-0.5"
+        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary border border-outline shadow-level3 "
         aria-label="Открыть чат"
       >
         <MessageSquare className="h-5 w-5" />
       </button>
 
       {open && (
-        <div className="fixed bottom-4 right-4 z-50 flex h-[70vh] w-[380px] max-w-[95vw] flex-col rounded-radius-lg bg-surface border-[3px] border-outline shadow-level4 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b-[3px] border-outline bg-surface">
+        <div className="fixed bottom-4 right-4 z-50 flex h-[70vh] w-[380px] max-w-[95vw] flex-col rounded-radius-lg bg-surface border border-outline shadow-level4 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-outline bg-surface">
             <h2 className="type-title-medium text-on-surface">Чат доски</h2>
             <div className="flex items-center gap-1">
               <Button size="sm" variant="text" onClick={handleClear} disabled={isPending}>
@@ -106,7 +106,7 @@ export function ChatPanel({ boardId }: { boardId: number }) {
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={`max-w-[85%] rounded-radius-md px-3 py-2 border-[2px] border-outline ${
+                className={`max-w-[85%] rounded-radius-md px-3 py-2 border border-outline ${
                   m.role === "user"
                     ? "self-end bg-primary-container text-on-primary-container"
                     : "self-start bg-surface-variant text-on-surface"
@@ -126,7 +126,7 @@ export function ChatPanel({ boardId }: { boardId: number }) {
             )}
           </div>
 
-          <div className="border-t-[3px] border-outline px-3 py-2 flex items-center gap-2 bg-surface">
+          <div className="border-t border-outline px-3 py-2 flex items-center gap-2 bg-surface">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -137,7 +137,7 @@ export function ChatPanel({ boardId }: { boardId: number }) {
                 }
               }}
               placeholder="Сообщение..."
-              className="flex-1 h-10 px-3 rounded-radius-sm bg-surface border-[2px] border-outline text-on-surface placeholder:text-on-surface/50 focus:outline-none focus:border-primary"
+              className="flex-1 h-10 px-3 rounded-radius-sm bg-surface border border-outline text-on-surface placeholder:text-on-surface/50 focus:outline-none focus:border-primary"
               disabled={loading}
             />
             <Button size="sm" onClick={handleSend} loading={loading} disabled={!input.trim()}>

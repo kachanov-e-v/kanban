@@ -37,7 +37,7 @@ export function ConfirmDialog({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-sm rounded-radius-lg bg-surface border-[3px] border-outline shadow-level4 p-6">
+      <div className="w-full max-w-sm rounded-radius-lg bg-surface border border-outline shadow-level4 p-6">
         <h2 className="type-title-large text-on-surface mb-2">{title}</h2>
         <p className="type-body-medium text-on-surface/80 mb-5 whitespace-pre-wrap">{message}</p>
         <div className="flex justify-end gap-2">

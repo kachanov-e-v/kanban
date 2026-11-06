@@ -34,7 +34,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     <dialog
       ref={dialogRef}
       className={cn(
-        "m-auto w-full max-w-md rounded-radius-lg bg-surface border-[3px] border-outline p-0 shadow-level4 backdrop:bg-black/60",
+        "m-auto w-full max-w-md rounded-radius-lg bg-surface border border-outline p-0 shadow-level4 backdrop:bg-black/60",
         "open:animate-[fadeIn_120ms_ease-out]",
         className,
       )}

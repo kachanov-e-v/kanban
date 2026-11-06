@@ -24,7 +24,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "h-12 px-4 type-body-large rounded-radius-sm bg-surface border-[3px] border-outline text-on-surface placeholder:text-on-surface/50",
+            "h-12 px-4 type-body-large rounded-radius-sm bg-surface border border-outline text-on-surface placeholder:text-on-surface/50",
             "transition-colors duration-100",
             "focus:outline-none focus:ring-0 focus:border-primary",
             error && "border-error focus:border-error",

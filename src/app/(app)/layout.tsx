@@ -8,7 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await getSession();
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-4 bg-surface border-b-[3px] border-outline px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-4 bg-surface border-b border-outline px-4 py-3 sm:px-6">
         <div className="flex items-center gap-4">
           <Link href="/boards" className="type-title-large text-on-surface">
             Trello Clone
@@ -16,13 +16,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <nav className="hidden sm:flex items-center gap-2">
             <Link
               href="/boards"
-              className="type-label-large text-on-surface hover:bg-primary/20 px-2 py-1 rounded-radius-sm border-[2px] border-transparent hover:border-outline"
+              className="type-label-large text-on-surface hover:bg-primary/20 px-2 py-1 rounded-radius-sm border border-transparent hover:border-outline"
             >
               Доски
             </Link>
             <Link
               href="/profile"
-              className="type-label-large text-on-surface hover:bg-primary/20 px-2 py-1 rounded-radius-sm border-[2px] border-transparent hover:border-outline"
+              className="type-label-large text-on-surface hover:bg-primary/20 px-2 py-1 rounded-radius-sm border border-transparent hover:border-outline"
             >
               Кабинет
             </Link>

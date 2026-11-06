@@ -113,7 +113,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex w-72 shrink-0 flex-col rounded-radius-lg bg-surface border-[3px] border-outline shadow-level1 transition-all"
+      className="flex w-72 shrink-0 flex-col rounded-radius-lg bg-surface border border-outline shadow-level1 transition-all"
       suppressHydrationWarning
       role="region"
       aria-labelledby={`list-title-${list.id}`}
@@ -132,7 +132,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface flex-1 break-words">
           {list.title}
         </h3>
-        <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border-[2px] border-outline">
+        <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border border-outline">
           {list.cards.length}
         </span>
         <button
@@ -171,7 +171,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
           ))}
         </SortableContext>
         {list.cards.length === 0 && (
-          <div className="flex items-center justify-center rounded-radius-md border-[3px] border-dashed border-outline py-6 text-on-surface/60 type-body-medium font-bold">
+          <div className="flex items-center justify-center rounded-radius-md border border-dashed border-outline py-6 text-on-surface/60 type-body-medium font-bold">
             Перетащите карточку сюда
           </div>
         )}

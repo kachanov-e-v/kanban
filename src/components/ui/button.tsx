@@ -6,14 +6,14 @@ type Size = "sm" | "md" | "lg";
 
 const variantClasses: Record<Variant, string> = {
   filled:
-    "bg-primary text-on-primary border-[3px] border-outline shadow-level1 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-level2 active:translate-x-0 active:translate-y-0 active:shadow-level1",
+    "bg-primary text-on-primary border border-outline shadow-level1 hover:shadow-level2 active:shadow-level1",
   tonal:
-    "bg-secondary-container text-on-secondary-container border-[3px] border-outline shadow-level1 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-level2 active:translate-x-0 active:translate-y-0 active:shadow-level1",
+    "bg-secondary-container text-on-secondary-container border border-outline shadow-level1 hover:shadow-level2 active:shadow-level1",
   outlined:
-    "border-[3px] border-outline bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container",
+    "border border-outline bg-surface text-on-surface hover:bg-primary-container hover:text-on-primary-container",
   text: "text-on-surface hover:bg-primary/20",
   elevated:
-    "bg-surface text-on-surface border-[3px] border-outline shadow-level1 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-level2 active:translate-x-0 active:translate-y-0 active:shadow-level1",
+    "bg-surface text-on-surface border border-outline shadow-level1 hover:shadow-level2 active:shadow-level1",
 };
 
 const sizeClasses: Record<Size, string> = {

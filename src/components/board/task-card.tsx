@@ -34,7 +34,7 @@ export function TaskCard({ card, onClick }: TaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group cursor-pointer rounded-radius-md bg-surface border-[3px] border-outline p-2.5 shadow-level1 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-level2"
+      className="group cursor-pointer rounded-radius-md bg-surface border border-outline p-2.5 shadow-level1 transition-all hover:shadow-level2"
       suppressHydrationWarning
       onClick={onClick}
       role="button"

@@ -62,7 +62,7 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 flex flex-col gap-8">
       <h1 className="type-headline-small text-on-surface">Личный кабинет</h1>
 
-      <section className="rounded-radius-lg bg-surface border-[3px] border-outline p-6 flex flex-col gap-4">
+      <section className="rounded-radius-lg bg-surface border border-outline p-6 flex flex-col gap-4">
         <h2 className="type-title-large text-on-surface">Профиль</h2>
         <Input label="Имя" value={name} onChange={(e) => setName(e.target.value)} />
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -79,7 +79,7 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
         </div>
       </section>
 
-      <section className="rounded-radius-lg bg-surface border-[3px] border-outline p-6 flex flex-col gap-4">
+      <section className="rounded-radius-lg bg-surface border border-outline p-6 flex flex-col gap-4">
         <h2 className="type-title-large text-on-surface">API для ИИ-чата</h2>
         <p className="type-body-medium text-on-surface-variant">
           Укажите полный URL OpenAI-совместимого endpoint (например, https://api.openai.com/v1/chat/completions).

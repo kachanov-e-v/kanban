@@ -126,7 +126,7 @@ export function CardModal({ cardId, boardId, members, onClose, onMutate }: CardM
     if (loading || !detail) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="rounded-radius-lg bg-surface border-[3px] border-outline p-6 shadow-level4">Загрузка...</div>
+        <div className="rounded-radius-lg bg-surface border border-outline p-6 shadow-level4">Загрузка...</div>
       </div>
     );
   }
@@ -136,8 +136,8 @@ export function CardModal({ cardId, boardId, members, onClose, onMutate }: CardM
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-radius-lg bg-surface border-[3px] border-outline my-8 shadow-level4">
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b-[3px] border-outline">
+      <div className="w-full max-w-2xl rounded-radius-lg bg-surface border border-outline my-8 shadow-level4">
+        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-outline">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -632,7 +632,7 @@ export function CardModal({ cardId, boardId, members, onClose, onMutate }: CardM
           )}
         </div>
 
-        <div className="px-6 py-3 border-t-[3px] border-outline flex justify-between items-center">
+        <div className="px-6 py-3 border-t border-outline flex justify-between items-center">
           <div className="flex gap-2">
             <Button
               variant="text"

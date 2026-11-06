@@ -252,7 +252,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
 
   return (
     <div className="flex h-full flex-col" style={bgStyle(data.board.background)}>
-      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 bg-surface border-b-[3px] border-outline">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 bg-surface border-b border-outline">
         <h1 className="type-title-large text-on-surface truncate">{data.board.title}</h1>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -261,13 +261,13 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Поиск..."
-              className="h-8 w-40 sm:w-56 rounded-radius-sm bg-surface border-[3px] border-outline px-8 pr-2 type-body-medium text-on-surface placeholder:text-on-surface/50 focus:outline-none focus:border-primary"
+              className="h-8 w-40 sm:w-56 rounded-radius-sm bg-surface border border-outline px-8 pr-2 type-body-medium text-on-surface placeholder:text-on-surface/50 focus:outline-none focus:border-primary"
             />
           </div>
           <button
             type="button"
             onClick={openArchive}
-            className="rounded-radius-sm p-1.5 bg-surface/80 border-[2px] border-outline text-on-surface hover:bg-primary/20"
+            className="rounded-radius-sm p-1.5 bg-surface/80 border border-outline text-on-surface hover:bg-primary/20"
             aria-label="Архив"
           >
             <Archive className="h-4 w-4" />
@@ -275,7 +275,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
           <button
             type="button"
             onClick={() => setShowFilter((v) => !v)}
-            className="rounded-radius-sm p-1.5 bg-surface border-[2px] border-outline text-on-surface hover:bg-primary/20"
+            className="rounded-radius-sm p-1.5 bg-surface border border-outline text-on-surface hover:bg-primary/20"
             aria-label="Фильтр"
           >
             <Filter className="h-4 w-4" />
@@ -287,7 +287,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
       </div>
 
       {showFilter && (
-        <div className="px-4 py-2 bg-surface border-b-[3px] border-outline flex flex-wrap gap-2">
+        <div className="px-4 py-2 bg-surface border-b border-outline flex flex-wrap gap-2">
           {data.labels.map((l) => {
             const active = filterLabelIds.includes(l.id);
             return (
@@ -299,7 +299,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
                     active ? prev.filter((x) => x !== l.id) : [...prev, l.id],
                   )
                 }
-                className={`rounded-full px-3 py-1 type-label-medium text-white border-[2px] border-outline ${
+                className={`rounded-full px-3 py-1 type-label-medium text-white border border-outline ${
                   active ? "ring-2 ring-outline" : "opacity-80"
                 }`}
                 style={{ backgroundColor: l.color }}
@@ -348,12 +348,12 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
         <DragOverlay>
           {dragCard ? (
             <div className="w-64 rotate-2 opacity-90">
-              <div className="rounded-radius-md bg-surface border-[3px] border-outline p-3 shadow-level3">
+              <div className="rounded-radius-md bg-surface border border-outline p-3 shadow-level3">
                 <p className="type-body-large text-on-surface font-bold">{dragCard.title}</p>
               </div>
             </div>
           ) : dragList ? (
-            <div className="w-72 rotate-1 opacity-90 rounded-radius-lg bg-surface border-[3px] border-outline p-3 shadow-level3">
+            <div className="w-72 rotate-1 opacity-90 rounded-radius-lg bg-surface border border-outline p-3 shadow-level3">
               <p className="type-title-medium text-on-surface">{dragList.title}</p>
             </div>
           ) : null}
@@ -387,7 +387,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
             <p className="type-body-medium text-on-surface/60">Архив пуст</p>
           )}
           {archivedCards.map((a) => (
-            <div key={a.card.id} className="flex items-center justify-between gap-3 rounded-radius-md bg-surface border-[2px] border-outline p-3">
+            <div key={a.card.id} className="flex items-center justify-between gap-3 rounded-radius-md bg-surface border border-outline p-3">
               <div className="min-w-0">
                 <p className="type-body-large text-on-surface font-bold truncate">{a.card.title}</p>
                 <p className="type-label-medium text-on-surface/60">{a.listTitle}</p>

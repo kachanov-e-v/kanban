@@ -187,9 +187,9 @@ export function BoardsView({
         {boards.map((b) => (
           <div
             key={b.id}
-            className="group relative overflow-hidden rounded-radius-lg bg-surface border-[3px] border-outline shadow-level1 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-level2"
+            className="group relative overflow-hidden rounded-radius-lg bg-surface border border-outline shadow-level1 transition-all hover:shadow-level2"
           >
-            <div className="h-3 border-b-[3px] border-outline" style={{ backgroundColor: bgStyleColor(b.background) }} />
+            <div className="h-3 border-b border-outline" style={{ backgroundColor: bgStyleColor(b.background) }} />
             <Link href={`/board/${b.id}`} className="block p-4 min-h-[96px]">
               <span className="type-title-medium text-on-surface">{b.title}</span>
               {b.description && (
@@ -201,7 +201,7 @@ export function BoardsView({
                 type="button"
                 onClick={() => openEditBoard(b)}
                 aria-label="Редактировать доску"
-                className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-primary/20"
+                className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-primary/20"
               >
                 <Pencil className="h-4 w-4" />
               </button>
@@ -209,7 +209,7 @@ export function BoardsView({
                 type="button"
                 onClick={() => toggleStar(b)}
                 aria-label={b.isStarred ? "Убрать из избранного" : "В избранное"}
-                className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-primary/20"
+                className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-primary/20"
               >
                 <Star className={"h-4 w-4 " + (b.isStarred ? "fill-current" : "")} />
               </button>
@@ -217,7 +217,7 @@ export function BoardsView({
                 type="button"
                 onClick={() => archiveBoard(b, true)}
                 aria-label="Архивировать"
-                className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-primary/20"
+                className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-primary/20"
               >
                 <Archive className="h-4 w-4" />
               </button>
@@ -225,7 +225,7 @@ export function BoardsView({
                 type="button"
                 onClick={() => removeBoard(b)}
                 aria-label="Удалить"
-                className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-error/20 hover:text-error"
+                className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-error/20 hover:text-error"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -248,9 +248,9 @@ export function BoardsView({
               {archived.map((b) => (
                 <div
                   key={b.id}
-                  className="relative overflow-hidden rounded-radius-lg bg-surface border-[3px] border-outline shadow-level1 opacity-60"
+                  className="relative overflow-hidden rounded-radius-lg bg-surface border border-outline shadow-level1 opacity-60"
                 >
-                  <div className="h-3 border-b-[3px] border-outline" style={{ backgroundColor: bgStyleColor(b.background) }} />
+                  <div className="h-3 border-b border-outline" style={{ backgroundColor: bgStyleColor(b.background) }} />
                   <Link href={`/board/${b.id}`} className="block p-4 min-h-[96px]">
                     <span className="type-title-medium text-on-surface">{b.title}</span>
                   </Link>
@@ -259,7 +259,7 @@ export function BoardsView({
                       type="button"
                       onClick={() => archiveBoard(b, false)}
                       aria-label="Восстановить"
-                      className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-primary/20"
+                      className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-primary/20"
                     >
                       <Archive className="h-4 w-4" />
                     </button>
@@ -267,7 +267,7 @@ export function BoardsView({
                       type="button"
                       onClick={() => removeBoard(b)}
                       aria-label="Удалить"
-                      className="rounded-radius-sm p-1 bg-surface border-[2px] border-outline text-on-surface hover:bg-error/20 hover:text-error"
+                      className="rounded-radius-sm p-1 bg-surface border border-outline text-on-surface hover:bg-error/20 hover:text-error"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -336,7 +336,7 @@ export function BoardsView({
                   type="button"
                   onClick={() => setEditBg(o.key)}
                   aria-label={o.key}
-                  className={`h-8 w-8 rounded-radius-sm border-[2px] border-outline transition ${editBg === o.key ? "ring-2 ring-on-surface" : "ring-transparent"}`}
+                  className={`h-8 w-8 rounded-radius-sm border border-outline transition ${editBg === o.key ? "ring-2 ring-on-surface" : "ring-transparent"}`}
                   style={{ backgroundColor: o.color }}
                 />
               ))}

@@ -1,0 +1,117 @@
+/* ================= Dark luxe design tokens ================= */
+
+:root {
+  color-scheme: dark;
+
+  /* Color - Dark luxe */
+  --color-bg: #0E0E10;
+  --color-surface: #18181B;
+  --color-surface-2: #1F1F23;
+  --color-text: #F2EFE9;
+  --color-muted: #A19C93;
+  --color-line: #2C2C30;
+  --color-primary: #C9A86A;
+  --color-on-primary: #17140E;
+  --color-accent: #E8E2D6;
+
+  /* Material 3 compatible aliases */
+  --md-sys-color-primary: #C9A86A;
+  --md-sys-color-on-primary: #17140E;
+  --md-sys-color-primary-container: #2A261C;
+  --md-sys-color-on-primary-container: #E8E2D6;
+  --md-sys-color-secondary: #A19C93;
+  --md-sys-color-on-secondary: #17140E;
+  --md-sys-color-secondary-container: #2C2C30;
+  --md-sys-color-on-secondary-container: #F2EFE9;
+  --md-sys-color-tertiary: #E8E2D6;
+  --md-sys-color-on-tertiary: #17140E;
+  --md-sys-color-tertiary-container: #2C2C30;
+  --md-sys-color-on-tertiary-container: #F2EFE9;
+  --md-sys-color-error: #D98A7B;
+  --md-sys-color-on-error: #17140E;
+  --md-sys-color-error-container: #3A2420;
+  --md-sys-color-on-error-container: #F2EFE9;
+  --md-sys-color-background: #0E0E10;
+  --md-sys-color-on-background: #F2EFE9;
+  --md-sys-color-surface: #18181B;
+  --md-sys-color-on-surface: #F2EFE9;
+  --md-sys-color-surface-variant: #1F1F23;
+  --md-sys-color-on-surface-variant: #A19C93;
+  --md-sys-color-outline: #2C2C30;
+  --md-sys-color-outline-variant: #2C2C30;
+  --md-sys-color-surface-container-lowest: #0A0A0C;
+  --md-sys-color-surface-container-low: #141416;
+  --md-sys-color-surface-container: #18181B;
+  --md-sys-color-surface-container-high: #1F1F23;
+  --md-sys-color-surface-container-highest: #26262A;
+  --md-sys-color-inverse-surface: #F2EFE9;
+  --md-sys-color-inverse-on-surface: #0E0E10;
+  --md-sys-color-inverse-primary: #C9A86A;
+
+  /* Shape */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 12px;
+  --md-sys-shape-corner-extra-large: 16px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* Elevation (soft) */
+  --md-sys-elevation-level0: none;
+  --md-sys-elevation-level1: 0 4px 16px rgba(0, 0, 0, .35);
+  --md-sys-elevation-level2: 0 8px 24px rgba(0, 0, 0, .4);
+  --md-sys-elevation-level3: 0 12px 40px rgba(0, 0, 0, .45);
+  --md-sys-elevation-level4: 0 16px 48px rgba(0, 0, 0, .5);
+  --md-sys-elevation-level5: 0 20px 60px rgba(0, 0, 0, .55);
+
+  /* Motion */
+  --md-sys-motion-duration-short1: 80ms;
+  --md-sys-motion-duration-short2: 150ms;
+  --md-sys-motion-duration-short3: 200ms;
+  --md-sys-motion-duration-short4: 250ms;
+  --md-sys-motion-duration-medium1: 300ms;
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+
+  /* Fonts */
+  --font-heading: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  --font-body: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Typography scale (rem) */
+  --md-sys-typescale-display-large-size: 3.5rem;
+  --md-sys-typescale-display-large-weight: 500;
+  --md-sys-typescale-display-large-line: 4rem;
+  --md-sys-typescale-headline-small-size: 1.75rem;
+  --md-sys-typescale-headline-small-weight: 500;
+  --md-sys-typescale-headline-small-line: 2.25rem;
+  --md-sys-typescale-title-large-size: 1.5rem;
+  --md-sys-typescale-title-large-weight: 500;
+  --md-sys-typescale-title-large-line: 2rem;
+  --md-sys-typescale-title-medium-size: 1.125rem;
+  --md-sys-typescale-title-medium-weight: 500;
+  --md-sys-typescale-title-medium-line: 1.5rem;
+  --md-sys-typescale-body-large-size: 1rem;
+  --md-sys-typescale-body-large-weight: 400;
+  --md-sys-typescale-body-large-line: 1.6rem;
+  --md-sys-typescale-body-medium-size: 0.875rem;
+  --md-sys-typescale-body-medium-weight: 400;
+  --md-sys-typescale-body-medium-line: 1.4rem;
+  --md-sys-typescale-label-large-size: 0.875rem;
+  --md-sys-typescale-label-large-weight: 500;
+  --md-sys-typescale-label-large-line: 1.25rem;
+  --md-sys-typescale-label-medium-size: 0.75rem;
+  --md-sys-typescale-label-medium-weight: 500;
+  --md-sys-typescale-label-medium-line: 1rem;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; }
+}

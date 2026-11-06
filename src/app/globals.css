@@ -1,143 +1,5 @@
+@import "./tokens.css";
 @import "tailwindcss";
-
-/* ================= Neo-brutalism design tokens ================= */
-
-:root {
-  color-scheme: light;
-
-  /* Color - light */
-  --md-sys-color-primary: #ff6b6b;
-  --md-sys-color-on-primary: #000000;
-  --md-sys-color-primary-container: #ffd43b;
-  --md-sys-color-on-primary-container: #000000;
-  --md-sys-color-secondary: #4dabf7;
-  --md-sys-color-on-secondary: #000000;
-  --md-sys-color-secondary-container: #a5d8ff;
-  --md-sys-color-on-secondary-container: #000000;
-  --md-sys-color-tertiary: #51cf66;
-  --md-sys-color-on-tertiary: #000000;
-  --md-sys-color-tertiary-container: #b2f2bb;
-  --md-sys-color-on-tertiary-container: #000000;
-  --md-sys-color-error: #ff3b30;
-  --md-sys-color-on-error: #ffffff;
-  --md-sys-color-error-container: #ffc9c9;
-  --md-sys-color-on-error-container: #000000;
-  --md-sys-color-background: #fef9c3;
-  --md-sys-color-on-background: #000000;
-  --md-sys-color-surface: #ffffff;
-  --md-sys-color-on-surface: #000000;
-  --md-sys-color-surface-variant: #ffffff;
-  --md-sys-color-on-surface-variant: #000000;
-  --md-sys-color-outline: #000000;
-  --md-sys-color-outline-variant: #000000;
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #ffffff;
-  --md-sys-color-surface-container: #ffffff;
-  --md-sys-color-surface-container-high: #f1f3f5;
-  --md-sys-color-surface-container-highest: #e9ecef;
-  --md-sys-color-inverse-surface: #000000;
-  --md-sys-color-inverse-on-surface: #ffffff;
-  --md-sys-color-inverse-primary: #ff6b6b;
-
-  /* Shape */
-  --md-sys-shape-corner-none: 0px;
-  --md-sys-shape-corner-extra-small: 4px;
-  --md-sys-shape-corner-small: 4px;
-  --md-sys-shape-corner-medium: 6px;
-  --md-sys-shape-corner-large: 8px;
-  --md-sys-shape-corner-extra-large: 12px;
-  --md-sys-shape-corner-full: 9999px;
-
-  /* Elevation (hard neo shadows) */
-  --md-sys-elevation-level0: none;
-  --md-sys-elevation-level1: 4px 4px 0px 0px #000000;
-  --md-sys-elevation-level2: 6px 6px 0px 0px #000000;
-  --md-sys-elevation-level3: 8px 8px 0px 0px #000000;
-  --md-sys-elevation-level4: 10px 10px 0px 0px #000000;
-  --md-sys-elevation-level5: 12px 12px 0px 0px #000000;
-
-  /* Motion */
-  --md-sys-motion-duration-short1: 80ms;
-  --md-sys-motion-duration-short2: 120ms;
-  --md-sys-motion-duration-short3: 160ms;
-  --md-sys-motion-duration-short4: 200ms;
-  --md-sys-motion-duration-medium1: 240ms;
-  --md-sys-motion-duration-medium2: 280ms;
-  --md-sys-motion-duration-medium3: 320ms;
-  --md-sys-motion-duration-medium4: 360ms;
-  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
-  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);
-  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
-  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
-
-  /* Typography scale (rem) */
-  --md-sys-typescale-display-large-size: 3.5rem;
-  --md-sys-typescale-display-large-weight: 800;
-  --md-sys-typescale-display-large-line: 4rem;
-  --md-sys-typescale-headline-small-size: 1.75rem;
-  --md-sys-typescale-headline-small-weight: 800;
-  --md-sys-typescale-headline-small-line: 2.25rem;
-  --md-sys-typescale-title-large-size: 1.5rem;
-  --md-sys-typescale-title-large-weight: 700;
-  --md-sys-typescale-title-large-line: 2rem;
-  --md-sys-typescale-title-medium-size: 1.125rem;
-  --md-sys-typescale-title-medium-weight: 700;
-  --md-sys-typescale-title-medium-line: 1.5rem;
-  --md-sys-typescale-body-large-size: 1rem;
-  --md-sys-typescale-body-large-weight: 500;
-  --md-sys-typescale-body-large-line: 1.5rem;
-  --md-sys-typescale-body-medium-size: 0.875rem;
-  --md-sys-typescale-body-medium-weight: 500;
-  --md-sys-typescale-body-medium-line: 1.25rem;
-  --md-sys-typescale-label-large-size: 0.875rem;
-  --md-sys-typescale-label-large-weight: 700;
-  --md-sys-typescale-label-large-line: 1.25rem;
-  --md-sys-typescale-label-medium-size: 0.75rem;
-  --md-sys-typescale-label-medium-weight: 700;
-  --md-sys-typescale-label-medium-line: 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-  }
-}
-
-.dark {
-  color-scheme: dark;
-  --md-sys-color-primary: #ff7b7b;
-  --md-sys-color-on-primary: #000000;
-  --md-sys-color-primary-container: #ffd43b;
-  --md-sys-color-on-primary-container: #000000;
-  --md-sys-color-secondary: #6cb6ff;
-  --md-sys-color-on-secondary: #000000;
-  --md-sys-color-secondary-container: #1e3a5f;
-  --md-sys-color-on-secondary-container: #dbeafe;
-  --md-sys-color-tertiary: #6ee7b7;
-  --md-sys-color-on-tertiary: #000000;
-  --md-sys-color-tertiary-container: #134e3a;
-  --md-sys-color-on-tertiary-container: #d1fae5;
-  --md-sys-color-error: #ff6b6b;
-  --md-sys-color-on-error: #000000;
-  --md-sys-color-error-container: #4a1515;
-  --md-sys-color-on-error-container: #fecaca;
-  --md-sys-color-background: #121212;
-  --md-sys-color-on-background: #fafafa;
-  --md-sys-color-surface: #1e1e1e;
-  --md-sys-color-on-surface: #fafafa;
-  --md-sys-color-surface-variant: #1e1e1e;
-  --md-sys-color-on-surface-variant: #fafafa;
-  --md-sys-color-outline: #fafafa;
-  --md-sys-color-outline-variant: #fafafa;
-  --md-sys-color-surface-container-lowest: #0a0a0a;
-  --md-sys-color-surface-container-low: #1e1e1e;
-  --md-sys-color-surface-container: #1e1e1e;
-  --md-sys-color-surface-container-high: #2a2a2a;
-  --md-sys-color-surface-container-highest: #333333;
-  --md-sys-color-inverse-surface: #fafafa;
-  --md-sys-color-inverse-on-surface: #121212;
-  --md-sys-color-inverse-primary: #ff7b7b;
-}
 
 @theme inline {
   --color-primary: var(--md-sys-color-primary);
@@ -186,9 +48,9 @@
   --shadow-level3: var(--md-sys-elevation-level3);
   --shadow-level4: var(--md-sys-elevation-level4);
 
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+  --font-mono: var(--font-mono);
 }
 
 /* Display font for headings */
@@ -197,7 +59,9 @@
 .type-title-large,
 .type-title-medium {
   font-family: var(--font-display);
+  letter-spacing: 0.03em;
 }
+
 /* Typography utilities */
 .type-display-large {
   font-size: var(--md-sys-typescale-display-large-size);
@@ -246,8 +110,6 @@ html {
 
 body {
   background-color: var(--md-sys-color-background);
-  background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
-  background-size: 16px 16px;
   color: var(--md-sys-color-on-background);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -255,37 +117,29 @@ body {
   min-height: 100vh;
 }
 
-.dark body {
-  background-color: var(--md-sys-color-background);
-  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
-  color: var(--md-sys-color-on-background);
-}
-
-/* Neo card / glass replacement */
+/* Cards / surfaces: layers from surface shades */
 .glass {
   background: var(--md-sys-color-surface);
-  border: 3px solid var(--md-sys-color-outline);
+  border: 1px solid var(--md-sys-color-outline);
   box-shadow: var(--md-sys-elevation-level1);
 }
-
 .glass-strong {
-  background: var(--md-sys-color-surface);
-  border: 3px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
   box-shadow: var(--md-sys-elevation-level2);
 }
-
 .glass-dark {
   background: var(--md-sys-color-surface-container-lowest);
-  border: 3px solid var(--md-sys-color-outline);
+  border: 1px solid var(--md-sys-color-outline);
   box-shadow: var(--md-sys-elevation-level1);
   color: var(--md-sys-color-on-surface);
 }
 
-/* Focus ring (neo) */
+/* Focus ring */
 :focus-visible {
-  outline: 3px solid var(--md-sys-color-outline);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
-  border-radius: var(--md-sys-shape-corner-extra-small);
+  border-radius: var(--md-sys-shape-corner-small);
 }
 
 /* State layer utility */
@@ -306,11 +160,13 @@ body {
 .state-layer:focus-visible::after { opacity: 0.1; }
 .state-layer:active::after { opacity: 0.1; }
 
-/* Hover lift utility for neo */
-.neo-hover:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px #000000;
+/* Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-sys-color-outline) transparent;
 }
+
+button { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -319,11 +175,3 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* Scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--md-sys-color-outline) transparent;
-}
-
-button { cursor: pointer; }

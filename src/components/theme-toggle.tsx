@@ -29,7 +29,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"}
-      className="rounded-radius-md p-2 bg-surface border-[3px] border-outline text-on-surface hover:bg-primary/20 transition"
+      className="rounded-radius-md p-2 bg-surface border border-outline text-on-surface hover:bg-primary/20 transition"
     >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
