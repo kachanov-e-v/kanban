@@ -230,12 +230,34 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "add_member_to_card",
-      description: "Назначить участника на карточку.",
+      name: "fill_cards",
+      description: "Массово заполнить поля у нескольких карточек за один вызов (описание, срок, цвет, метки, чек-лист, комментарий, вложение, участник).",
       parameters: {
         type: "object",
-        properties: { cardId: { type: "number" }, userId: { type: "number" } },
-        required: ["cardId", "userId"],
+        properties: {
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                cardId: { type: "number" },
+                title: { type: "string" },
+                description: { type: "string" },
+                dueDate: { type: "string" },
+                coverColor: { type: "string" },
+                labelIds: { type: "array", items: { type: "number" } },
+                checklistTitle: { type: "string" },
+                checklistItems: { type: "array", items: { type: "string" } },
+                comment: { type: "string" },
+                attachmentName: { type: "string" },
+                attachmentUrl: { type: "string" },
+                memberId: { type: "number" },
+              },
+              required: ["cardId"],
+            },
+          },
+        },
+        required: ["items"],
       },
     },
   },
@@ -617,6 +639,68 @@ async function executeTool(
       db.prepare("INSERT OR IGNORE INTO card_members (card_id, user_id) VALUES (?, ?)").run(cardId, userIdArg);
       return `Участник ${userIdArg} назначен на карточку ${cardId}.`;
     }
+    case "fill_cards": {
+      const items = z.array(z.object({
+        cardId: z.number().int(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        coverColor: z.string().optional(),
+        labelIds: z.array(z.number().int()).optional(),
+        checklistTitle: z.string().optional(),
+        checklistItems: z.array(z.string()).optional(),
+        comment: z.string().optional(),
+        attachmentName: z.string().optional(),
+        attachmentUrl: z.string().optional(),
+        memberId: z.number().int().optional(),
+      })).parse(args.items);
+      let count = 0;
+      for (const it of items) {
+        const card = db
+          .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
+          .get(it.cardId, boardId);
+        if (!card) continue;
+        // update card fields
+        const fields: string[] = [];
+        const values: unknown[] = [];
+        if (it.title !== undefined) { fields.push("title = ?"); values.push(it.title); }
+        if (it.description !== undefined) { fields.push("description = ?"); values.push(it.description); }
+        if (it.dueDate !== undefined) { fields.push("due_date = ?"); values.push(it.dueDate); }
+        if (it.coverColor !== undefined) { fields.push("cover_color = ?"); values.push(it.coverColor); }
+        if (fields.length) {
+          fields.push("updated_at = datetime('now')");
+          values.push(it.cardId);
+          db.prepare(`UPDATE cards SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+        }
+        if (it.labelIds) {
+          for (const lid of it.labelIds) {
+            db.prepare("INSERT OR IGNORE INTO card_labels (card_id, label_id) VALUES (?, ?)").run(it.cardId, lid);
+          }
+        }
+        if (it.checklistTitle) {
+          const max = db.prepare("SELECT COALESCE(MAX(position), -1) AS m FROM checklists WHERE card_id = ?").get(it.cardId) as { m: number };
+          const r = db.prepare("INSERT INTO checklists (card_id, title, position) VALUES (?, ?, ?)").run(it.cardId, it.checklistTitle, max.m + 1);
+          const clId = Number(r.lastInsertRowid);
+          if (it.checklistItems) {
+            let pos = 0;
+            for (const t of it.checklistItems) {
+              db.prepare("INSERT INTO checklist_items (checklist_id, text, position) VALUES (?, ?, ?)").run(clId, t, pos++);
+            }
+          }
+        }
+        if (it.comment) {
+          db.prepare("INSERT INTO comments (card_id, user_id, text) VALUES (?, ?, ?)").run(it.cardId, userId, it.comment);
+        }
+        if (it.attachmentName && it.attachmentUrl) {
+          db.prepare("INSERT INTO attachments (card_id, name, url) VALUES (?, ?, ?)").run(it.cardId, it.attachmentName, it.attachmentUrl);
+        }
+        if (it.memberId !== undefined) {
+          db.prepare("INSERT OR IGNORE INTO card_members (card_id, user_id) VALUES (?, ?)").run(it.cardId, it.memberId);
+        }
+        count++;
+      }
+      return `Заполнено полей у ${count} карточек.`;
+    }
     default:
       return `Неизвестный инструмент: ${name}`;
   }
@@ -679,6 +763,7 @@ async function runChat(
 Когда пользователь просит создать "список карточек" — создай список (колонку) и/или карточки в подходящем списке. Если списка нет — сначала создай список, затем карточки.
 Перед действиями используй актуальное состояние доски ниже. ID списков/карточек бери из него.
 Если пользователь просит заполнить все поля карточек — самостоятельно и без уточнений заполни их тестовыми данными: описание, срок, цвет обложки, метки (создай при необходимости), чек-лист с пунктами, комментарий, вложение, участника. Используй ID из состояния доски и результатов инструментов.
+Старайся выполнять задачи за минимальное число обращений к модели: объединяй массовые операции в один вызов инструмента (create_cards вместо множества create_card, fill_cards для заполнения полей, несколько tool_calls в одном ответе). Не вызывай инструменты по одному, если можно передать списком.
 
 Текущее состояние доски:
 ${await boardStateText(boardId)}`;

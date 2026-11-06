@@ -16,6 +16,7 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
   const [profileErr, setProfileErr] = useState<string | null>(null);
   const [profilePending, startProfile] = useTransition();
 
+  const [aiProvider, setAiProvider] = useState(initial.aiProvider);
   const [aiBaseUrl, setAiBaseUrl] = useState(initial.aiBaseUrl);
   const [aiModel, setAiModel] = useState(initial.aiModel);
   const [aiApiKey, setAiApiKey] = useState(initial.aiApiKey);
@@ -45,6 +46,7 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
     startAi(async () => {
       try {
         await updateAiSettings({
+          provider: aiProvider,
           baseUrl: aiBaseUrl,
           model: aiModel,
           apiKey: aiApiKey,
@@ -85,9 +87,32 @@ export function ProfileView({ initial }: { initial: ProfileDTO }) {
           Укажите полный URL OpenAI-совместимого endpoint (например, https://api.openai.com/v1/chat/completions).
           Если поля пустые, используются значения из окружения сервера.
         </p>
+        <div className="flex flex-col gap-1">
+          <label className="type-label-large text-on-surface-variant">Провайдер</label>
+          <select
+            value={aiProvider}
+            onChange={(e) => {
+              const p = e.target.value;
+              setAiProvider(p);
+              if (p === "kilo" && !aiModel) setAiModel("reflection/beam-free");
+              if (p === "openrouter" && !aiModel) setAiModel("openai/gpt-4o-mini");
+            }}
+            className="h-12 px-4 type-body-large rounded-radius-sm bg-surface border-[3px] border-outline text-on-surface focus:outline-none focus:border-primary"
+          >
+            <option value="kilo">Kilo (по умолчанию)</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="custom">Свой (custom)</option>
+          </select>
+        </div>
         <Input
-          label="Base URL (полный endpoint)"
-          placeholder="https://api.openai.com/v1/chat/completions"
+          label="Base URL (переопределение, необязательно)"
+          placeholder={
+            aiProvider === "kilo"
+              ? "https://api.kilo.ai/api/gateway/v1/chat/completions"
+              : aiProvider === "openrouter"
+              ? "https://openrouter.ai/api/v1/chat/completions"
+              : "https://text.pollinations.ai/openai"
+          }
           value={aiBaseUrl}
           onChange={(e) => setAiBaseUrl(e.target.value)}
         />

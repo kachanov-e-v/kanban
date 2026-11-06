@@ -174,7 +174,7 @@ function initSchema(db: Database.Database) {
   if (!userCols.includes("ai_base_url")) db.exec("ALTER TABLE users ADD COLUMN ai_base_url TEXT");
   if (!userCols.includes("ai_model")) db.exec("ALTER TABLE users ADD COLUMN ai_model TEXT");
   if (!userCols.includes("ai_api_key")) db.exec("ALTER TABLE users ADD COLUMN ai_api_key TEXT");
-  if (!userCols.includes("ai_enabled")) db.exec("ALTER TABLE users ADD COLUMN ai_enabled INTEGER NOT NULL DEFAULT 1");
+  if (!userCols.includes("ai_provider")) db.exec("ALTER TABLE users ADD COLUMN ai_provider TEXT");
 }
 
 export type UserRow = {
@@ -187,6 +187,7 @@ export type UserRow = {
   ai_model: string | null;
   ai_api_key: string | null;
   ai_enabled: number;
+  ai_provider: string | null;
 };
 
 export type BoardRow = {

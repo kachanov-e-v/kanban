@@ -10,6 +10,7 @@ export type ProfileDTO = {
   id: number;
   name: string;
   email: string;
+  aiProvider: string;
   aiBaseUrl: string;
   aiModel: string;
   aiApiKey: string;
@@ -24,6 +25,7 @@ export async function getProfile(): Promise<ProfileDTO> {
     id: user.id,
     name: user.name,
     email: user.email,
+    aiProvider: user.ai_provider ?? "kilo",
     aiBaseUrl: user.ai_base_url ?? "",
     aiModel: user.ai_model ?? "",
     aiApiKey: user.ai_api_key ?? "",
@@ -75,6 +77,7 @@ export async function updateProfile(input: {
 }
 
 export async function updateAiSettings(input: {
+  provider: string;
   baseUrl: string;
   model: string;
   apiKey: string;
@@ -82,13 +85,15 @@ export async function updateAiSettings(input: {
 }): Promise<void> {
   const session = await requireSession();
   const db = getDb();
+  const provider = z.enum(["kilo", "openrouter", "custom"]).safeParse(input.provider);
   const baseUrl = z.string().trim().max(500).safeParse(input.baseUrl);
   const model = z.string().trim().max(100).safeParse(input.model);
   const apiKey = z.string().trim().max(500).safeParse(input.apiKey);
-  if (!baseUrl.success || !model.success || !apiKey.success) throw new Error("Некорректные настройки ИИ");
+  if (!provider.success || !baseUrl.success || !model.success || !apiKey.success) throw new Error("Некорректные настройки ИИ");
   db.prepare(
-    "UPDATE users SET ai_base_url = ?, ai_model = ?, ai_api_key = ?, ai_enabled = ? WHERE id = ?",
+    "UPDATE users SET ai_provider = ?, ai_base_url = ?, ai_model = ?, ai_api_key = ?, ai_enabled = ? WHERE id = ?",
   ).run(
+    provider.data,
     baseUrl.data || null,
     model.data || null,
     apiKey.data || null,
@@ -106,13 +111,24 @@ export async function getAiConfig(userId: number): Promise<{
 }> {
   const db = getDb();
   const user = db
-    .prepare("SELECT ai_base_url, ai_model, ai_api_key, ai_enabled FROM users WHERE id = ?")
+    .prepare("SELECT ai_provider, ai_base_url, ai_model, ai_api_key, ai_enabled FROM users WHERE id = ?")
     .get(userId) as
-    | { ai_base_url: string | null; ai_model: string | null; ai_api_key: string | null; ai_enabled: number }
+    | { ai_provider: string | null; ai_base_url: string | null; ai_model: string | null; ai_api_key: string | null; ai_enabled: number }
     | undefined;
-  const baseUrl = user?.ai_base_url?.trim() || process.env.AI_BASE_URL || "https://text.pollinations.ai/openai";
-  const model = user?.ai_model?.trim() || process.env.AI_MODEL || "openai";
+  const provider = user?.ai_provider || "kilo";
+  let baseUrl = user?.ai_base_url?.trim() || "";
+  let model = user?.ai_model?.trim() || "";
   const apiKey = user?.ai_api_key?.trim() || process.env.AI_API_KEY || "";
+  if (!baseUrl) {
+    if (provider === "kilo") baseUrl = "https://api.kilo.ai/api/gateway/v1/chat/completions";
+    else if (provider === "openrouter") baseUrl = "https://openrouter.ai/api/v1/chat/completions";
+    else baseUrl = process.env.AI_BASE_URL || "https://text.pollinations.ai/openai";
+  }
+  if (!model) {
+    if (provider === "kilo") model = "reflection/beam-free";
+    else if (provider === "openrouter") model = "openai/gpt-4o-mini";
+    else model = process.env.AI_MODEL || "openai";
+  }
   const enabled = user?.ai_enabled !== 0;
   return { baseUrl, model, apiKey, enabled };
 }
