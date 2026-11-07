@@ -118,10 +118,10 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
       role="region"
       aria-labelledby={`list-title-${list.id}`}
     >
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+      <div className="relative px-3 py-2.5">
         <button
           type="button"
-          className="cursor-grab touch-none rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute left-2 top-2 cursor-grab touch-none rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Переместить список"
           {...attributes}
           {...listeners}
@@ -129,39 +129,41 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface min-w-0 flex-1 break-words">
+        <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface break-words pl-8 pr-24">
           {list.title}
         </h3>
-        <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border-[2px] border-outline">
-          {list.cards.length}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            setEditTitle(list.title);
-            setEditOpen(true);
-          }}
-          aria-label="Редактировать список"
-          className="shrink-0 rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={handleArchive}
-          aria-label="Архивировать список"
-          className="shrink-0 rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <Archive className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          aria-label="Удалить список"
-          className="shrink-0 rounded p-1 text-on-surface-variant hover:text-error hover:bg-error/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        <div className="absolute right-2 top-2 flex items-center gap-1">
+          <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border-[2px] border-outline">
+            {list.cards.length}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setEditTitle(list.title);
+              setEditOpen(true);
+            }}
+            aria-label="Редактировать список"
+            className="rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleArchive}
+            aria-label="Архивировать список"
+            className="rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Archive className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            aria-label="Удалить список"
+            className="rounded p-1 text-on-surface-variant hover:text-error hover:bg-error/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
