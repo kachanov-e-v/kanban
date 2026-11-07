@@ -164,7 +164,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
         <SortableContext items={list.cards.map((c) => cardId(c.id))} strategy={verticalListSortingStrategy}>
           {list.cards.map((card) => (
             <TaskCard key={card.id} card={card} onClick={() => onCardClick(card.id)} />

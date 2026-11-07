@@ -327,7 +327,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
+        <div className="flex min-h-0 flex-1 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
           <SortableContext
             items={filteredLists.map((l) => listId(l.id))}
             strategy={horizontalListSortingStrategy}
