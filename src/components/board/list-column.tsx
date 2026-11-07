@@ -113,7 +113,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex w-72 shrink-0 flex-col rounded-radius-lg bg-surface border-[3px] border-outline shadow-level1 transition-all"
+      className="flex w-72 shrink-0 flex-col rounded-radius-lg bg-surface border-[3px] border-outline shadow-level1 transition-all h-full overflow-hidden"
       suppressHydrationWarning
       role="region"
       aria-labelledby={`list-title-${list.id}`}
@@ -164,7 +164,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2" style={{ maxHeight: "calc(100vh - 200px)" }}>
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
         <SortableContext items={list.cards.map((c) => cardId(c.id))} strategy={verticalListSortingStrategy}>
           {list.cards.map((card) => (
             <TaskCard key={card.id} card={card} onClick={() => onCardClick(card.id)} />
