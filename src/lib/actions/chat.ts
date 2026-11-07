@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth";
-import { getDb, type ChatMessageRow } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { getBoard } from "@/lib/actions/board";
 import { getAiConfig } from "@/lib/actions/profile";
 import { z } from "zod";
@@ -274,15 +274,12 @@ const tools = [
     },
   },
 ];
-function ownedBoard(boardId: number, userId: number): boolean {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT id FROM boards WHERE id = ? AND owner_id = ?")
-    .get(boardId, userId);
+async function ownedBoard(boardId: number, userId: number): Promise<boolean> {
+  const row = await prisma.board.findFirst({ where: { id: boardId, ownerId: userId }, select: { id: true } });
   return !!row;
 }
 
-function insertMessage(
+async function insertMessage(
   boardId: number,
   userId: number,
   role: string,
@@ -291,18 +288,17 @@ function insertMessage(
   toolCallId?: string | null,
   name?: string | null,
 ) {
-  const db = getDb();
-  db.prepare(
-    "INSERT INTO chat_messages (board_id, user_id, role, content, tool_calls, tool_call_id, name) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run(
-    boardId,
-    userId,
-    role,
-    content,
-    toolCalls ? JSON.stringify(toolCalls) : null,
-    toolCallId ?? null,
-    name ?? null,
-  );
+  await prisma.chatMessage.create({
+    data: {
+      boardId,
+      userId,
+      role,
+      content: content ?? undefined,
+      toolCalls: toolCalls ? JSON.stringify(toolCalls) : null,
+      toolCallId: toolCallId ?? null,
+      name: name ?? null,
+    },
+  });
 }
 
 async function chatCompletion(
@@ -396,12 +392,11 @@ async function boardStateText(boardId: number): Promise<string> {
   return lines.join("\n");
 }
 
-async function executeTool(
+﻿async function executeTool(
   name: string,
   args: Record<string, unknown>,
   ctx: { boardId: number; userId: number },
 ): Promise<string> {
-  const db = getDb();
   const { boardId, userId } = ctx;
 
   switch (name) {
@@ -411,243 +406,151 @@ async function executeTool(
     }
     case "create_list": {
       const title = z.string().trim().min(1).max(80).parse(args.title);
-      const max = db
-        .prepare("SELECT COALESCE(MAX(position), -1) AS m FROM lists WHERE board_id = ?")
-        .get(boardId) as { m: number };
-      db.prepare("INSERT INTO lists (board_id, title, position) VALUES (?, ?, ?)").run(
-        boardId,
-        title,
-        max.m + 1,
-      );
+      const max = await prisma.list.aggregate({ where: { boardId }, _max: { position: true } });
+      await prisma.list.create({ data: { boardId, title, position: (max._max.position ?? -1) + 1 } });
       return `Список "${title}" создан.`;
     }
     case "create_card": {
       const listId = z.number().int().parse(args.listId);
       const title = z.string().trim().min(1).max(120).parse(args.title);
       const description = z.string().max(5000).optional().parse(args.description ?? "");
-      // verify list belongs to board
-      const list = db
-        .prepare("SELECT id FROM lists WHERE id = ? AND board_id = ?")
-        .get(listId, boardId);
+      const list = await prisma.list.findFirst({ where: { id: listId, boardId } });
       if (!list) return "Список не найден на этой доске.";
-      const max = db
-        .prepare("SELECT COALESCE(MAX(position), -1) AS m FROM cards WHERE list_id = ?")
-        .get(listId) as { m: number };
-      const r = db
-        .prepare("INSERT INTO cards (list_id, title, description, position, created_by) VALUES (?, ?, ?, ?, ?)")
-        .run(listId, title, description ?? "", max.m + 1, userId);
-      return `Карточка "${title}" создана (id=${r.lastInsertRowid}).`;
+      const max = await prisma.card.aggregate({ where: { listId }, _max: { position: true } });
+      const card = await prisma.card.create({ data: { listId, title, description: description ?? "", position: (max._max.position ?? -1) + 1, createdById: userId } });
+      return `Карточка "${title}" создана (id=${card.id}).`;
     }
     case "create_cards": {
       const listId = z.number().int().parse(args.listId);
       const titles = z.array(z.string().trim().min(1).max(120)).parse(args.titles);
-      const list = db
-        .prepare("SELECT id FROM lists WHERE id = ? AND board_id = ?")
-        .get(listId, boardId);
+      const list = await prisma.list.findFirst({ where: { id: listId, boardId } });
       if (!list) return "Список не найден на этой доске.";
-      let max = (db
-        .prepare("SELECT COALESCE(MAX(position), -1) AS m FROM cards WHERE list_id = ?")
-        .get(listId) as { m: number }).m;
+      const maxAgg = await prisma.card.aggregate({ where: { listId }, _max: { position: true } });
+      let max = maxAgg._max.position ?? -1;
       const ids: number[] = [];
-      const tx = db.transaction(() => {
-        for (const t of titles) {
-          max += 1;
-          const r = db
-            .prepare("INSERT INTO cards (list_id, title, description, position, created_by) VALUES (?, ?, ?, ?, ?)")
-            .run(listId, t, "", max, userId);
-          ids.push(Number(r.lastInsertRowid));
-        }
-      });
-      tx();
+      for (const t of titles) {
+        max += 1;
+        const card = await prisma.card.create({ data: { listId, title: t, description: "", position: max, createdById: userId } });
+        ids.push(card.id);
+      }
       return `Создано ${titles.length} карточек. Идентификаторы: ${ids.map((id, i) => `${id} (${titles[i]})`).join(", ")}.`;
     }
     case "move_card": {
       const cardId = z.number().int().parse(args.cardId);
       const toListId = z.number().int().parse(args.toListId);
       const toIndex = z.number().int().optional().parse(args.toIndex ?? 0);
-      // verify card and lists belong to board
-      const card = db
-        .prepare(
-          `SELECT c.id, c.list_id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`,
-        )
-        .get(cardId, boardId) as { id: number; list_id: number } | undefined;
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена на этой доске.";
-      const toList = db
-        .prepare("SELECT id FROM lists WHERE id = ? AND board_id = ?")
-        .get(toListId, boardId);
+      const toList = await prisma.list.findFirst({ where: { id: toListId, boardId } });
       if (!toList) return "Список назначения не найден.";
-      const fromListId = card.list_id;
-      const tx = db.transaction(() => {
+      const fromListId = card.listId;
+      await prisma.$transaction(async (tx) => {
         if (fromListId !== toListId) {
-          const srcCards = db
-            .prepare("SELECT id FROM cards WHERE list_id = ? AND id != ? AND is_archived = 0 ORDER BY position ASC, id ASC")
-            .all(fromListId, cardId) as { id: number }[];
-          srcCards.forEach((c, idx) => db.prepare("UPDATE cards SET position = ? WHERE id = ?").run(idx, c.id));
+          const srcCards = await tx.card.findMany({ where: { listId: fromListId, id: { not: cardId }, isArchived: false }, orderBy: [{ position: "asc" }, { id: "asc" }] });
+          for (let i = 0; i < srcCards.length; i++) await tx.card.update({ where: { id: srcCards[i].id }, data: { position: i } });
         }
-        const destCards = db
-          .prepare("SELECT id FROM cards WHERE list_id = ? AND id != ? AND is_archived = 0 ORDER BY position ASC, id ASC")
-          .all(toListId, cardId) as { id: number }[];
+        const destCards = await tx.card.findMany({ where: { listId: toListId, id: { not: cardId }, isArchived: false }, orderBy: [{ position: "asc" }, { id: "asc" }] });
         const clamped = Math.max(0, Math.min(toIndex ?? 0, destCards.length));
-        destCards.splice(clamped, 0, { id: cardId });
-        db.prepare("UPDATE cards SET list_id = ? WHERE id = ?").run(toListId, cardId);
-        destCards.forEach((c, idx) =>
-          db.prepare("UPDATE cards SET position = ?, list_id = ? WHERE id = ?").run(idx, toListId, c.id),
-        );
+        destCards.splice(clamped, 0, card as any);
+        await tx.card.update({ where: { id: cardId }, data: { listId: toListId } });
+        for (let i = 0; i < destCards.length; i++) await tx.card.update({ where: { id: destCards[i].id }, data: { position: i, listId: toListId } });
       });
-      tx();
       return `Карточка ${cardId} перемещена.`;
     }
     case "archive_card": {
       const cardId = z.number().int().parse(args.cardId);
       const archived = z.boolean().parse(args.archived);
-      const card = db
-        .prepare(
-          `SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`,
-        )
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("UPDATE cards SET is_archived = ?, updated_at = datetime('now') WHERE id = ?").run(
-        archived ? 1 : 0,
-        cardId,
-      );
+      await prisma.card.update({ where: { id: cardId }, data: { isArchived: archived, updatedAt: new Date() } });
       return archived ? `Карточка ${cardId} архивирована.` : `Карточка ${cardId} восстановлена.`;
     }
     case "delete_card": {
       const cardId = z.number().int().parse(args.cardId);
-      const card = db
-        .prepare(
-          `SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`,
-        )
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("DELETE FROM cards WHERE id = ?").run(cardId);
+      await prisma.card.delete({ where: { id: cardId } });
       return `Карточка ${cardId} удалена.`;
     }
     case "create_label": {
       const name = z.string().trim().max(40).parse(args.name ?? "");
       const color = z.string().regex(/^#[0-9a-fA-F]{6}$/).parse(args.color);
-      const r = db
-        .prepare("INSERT INTO labels (board_id, name, color) VALUES (?, ?, ?)")
-        .run(boardId, name, color);
-      return `Метка создана (id=${r.lastInsertRowid}).`;
+      const r = await prisma.label.create({ data: { boardId, name, color } });
+      return `Метка создана (id=${r.id}).`;
     }
     case "add_comment": {
       const cardId = z.number().int().parse(args.cardId);
       const text = z.string().trim().min(1).max(2000).parse(args.text);
-      const card = db
-        .prepare(
-          `SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`,
-        )
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("INSERT INTO comments (card_id, user_id, text) VALUES (?, ?, ?)").run(
-        cardId,
-        userId,
-        text,
-      );
+      await prisma.comment.create({ data: { cardId, userId, text } });
       return `Комментарий добавлен к карточке ${cardId}.`;
     }
     case "update_card": {
       const cardId = z.number().int().parse(args.cardId);
-      const card = db
-        .prepare(
-          `SELECT c.id, c.list_id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`,
-        )
-        .get(cardId, boardId) as { id: number; list_id: number } | undefined;
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      const fields: string[] = [];
-      const values: unknown[] = [];
-      if (args.title !== undefined) {
-        const t = z.string().trim().min(1).max(120).parse(args.title);
-        fields.push("title = ?");
-        values.push(t);
-      }
-      if (args.description !== undefined) {
-        const d = z.string().max(5000).parse(args.description);
-        fields.push("description = ?");
-        values.push(d);
-      }
-      if (args.dueDate !== undefined) {
-        const due = args.dueDate === null ? null : z.string().parse(args.dueDate);
-        fields.push("due_date = ?");
-        values.push(due);
-      }
-      if (args.coverColor !== undefined) {
-        const cc = args.coverColor === null ? null : z.string().parse(args.coverColor);
-        fields.push("cover_color = ?");
-        values.push(cc);
-      }
-      if (!fields.length) return "Нет изменений.";
-      fields.push("updated_at = datetime('now')");
-      values.push(cardId);
-      db.prepare(`UPDATE cards SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+      const data: any = {};
+      if (args.title !== undefined) data.title = z.string().trim().min(1).max(120).parse(args.title);
+      if (args.description !== undefined) data.description = z.string().max(5000).parse(args.description);
+      if (args.dueDate !== undefined) data.dueDate = args.dueDate === null ? null : new Date(z.string().parse(args.dueDate));
+      if (args.coverColor !== undefined) data.coverColor = args.coverColor === null ? null : z.string().parse(args.coverColor);
+      if (Object.keys(data).length === 0) return "Нет изменений.";
+      data.updatedAt = new Date();
+      await prisma.card.update({ where: { id: cardId }, data });
       return `Карточка ${cardId} обновлена.`;
     }
     case "add_label_to_card": {
       const cardId = z.number().int().parse(args.cardId);
       const labelId = z.number().int().parse(args.labelId);
-      const card = db
-        .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      const label = db.prepare("SELECT board_id FROM labels WHERE id = ?").get(labelId) as { board_id: number } | undefined;
-      if (!label || label.board_id !== boardId) return "Метка не найдена.";
-      db.prepare("INSERT OR IGNORE INTO card_labels (card_id, label_id) VALUES (?, ?)").run(cardId, labelId);
+      const label = await prisma.label.findFirst({ where: { id: labelId, boardId } });
+      if (!label) return "Метка не найдена.";
+      await prisma.cardLabel.upsert({ where: { cardId_labelId: { cardId, labelId } }, create: { cardId, labelId }, update: {} });
       return `Метка ${labelId} привязана к карточке ${cardId}.`;
     }
     case "remove_label_from_card": {
       const cardId = z.number().int().parse(args.cardId);
       const labelId = z.number().int().parse(args.labelId);
-      const card = db
-        .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("DELETE FROM card_labels WHERE card_id = ? AND label_id = ?").run(cardId, labelId);
+      await prisma.cardLabel.deleteMany({ where: { cardId, labelId } });
       return `Метка ${labelId} снята с карточки ${cardId}.`;
     }
     case "create_checklist": {
       const cardId = z.number().int().parse(args.cardId);
       const title = z.string().trim().min(1).max(80).parse(args.title);
-      const card = db
-        .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      const max = db.prepare("SELECT COALESCE(MAX(position), -1) AS m FROM checklists WHERE card_id = ?").get(cardId) as { m: number };
-      const r = db.prepare("INSERT INTO checklists (card_id, title, position) VALUES (?, ?, ?)").run(cardId, title, max.m + 1);
-      return `Чек-лист "${title}" создан (id=${r.lastInsertRowid}).`;
+      const max = await prisma.checklist.aggregate({ where: { cardId }, _max: { position: true } });
+      const r = await prisma.checklist.create({ data: { cardId, title, position: (max._max.position ?? -1) + 1 } });
+      return `Чек-лист "${title}" создан (id=${r.id}).`;
     }
     case "create_checklist_item": {
       const checklistId = z.number().int().parse(args.checklistId);
       const text = z.string().trim().min(1).max(200).parse(args.text);
-      const row = db
-        .prepare(
-          `SELECT cl.id, cl.card_id, c.list_id, l.board_id FROM checklists cl JOIN cards c ON c.id = cl.card_id JOIN lists l ON l.id = c.list_id WHERE cl.id = ? AND l.board_id = ?`,
-        )
-        .get(checklistId, boardId) as { id: number } | undefined;
+      const row = await prisma.checklist.findFirst({ where: { id: checklistId, card: { list: { boardId } } } });
       if (!row) return "Чек-лист не найден.";
-      const max = db.prepare("SELECT COALESCE(MAX(position), -1) AS m FROM checklist_items WHERE checklist_id = ?").get(checklistId) as { m: number };
-      db.prepare("INSERT INTO checklist_items (checklist_id, text, position) VALUES (?, ?, ?)").run(checklistId, text, max.m + 1);
+      const max = await prisma.checklistItem.aggregate({ where: { checklistId }, _max: { position: true } });
+      await prisma.checklistItem.create({ data: { checklistId, text, position: (max._max.position ?? -1) + 1 } });
       return `Пункт добавлен в чек-лист ${checklistId}.`;
     }
     case "add_attachment": {
       const cardId = z.number().int().parse(args.cardId);
       const name = z.string().trim().min(1).max(120).parse(args.name);
       const url = z.string().trim().url().parse(args.url);
-      const card = db
-        .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("INSERT INTO attachments (card_id, name, url) VALUES (?, ?, ?)").run(cardId, name, url);
+      await prisma.attachment.create({ data: { cardId, name, url } });
       return `Вложение "${name}" добавлено к карточке ${cardId}.`;
     }
     case "add_member_to_card": {
       const cardId = z.number().int().parse(args.cardId);
       const userIdArg = z.number().int().parse(args.userId);
-      const card = db
-        .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-        .get(cardId, boardId);
+      const card = await prisma.card.findFirst({ where: { id: cardId, list: { boardId } } });
       if (!card) return "Карточка не найдена.";
-      db.prepare("INSERT OR IGNORE INTO card_members (card_id, user_id) VALUES (?, ?)").run(cardId, userIdArg);
+      await prisma.cardMember.upsert({ where: { cardId_userId: { cardId, userId: userIdArg } }, create: { cardId, userId: userIdArg }, update: {} });
       return `Участник ${userIdArg} назначен на карточку ${cardId}.`;
     }
     case "fill_cards": {
@@ -667,47 +570,35 @@ async function executeTool(
       })).parse(args.items);
       let count = 0;
       for (const it of items) {
-        const card = db
-          .prepare(`SELECT c.id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = ? AND l.board_id = ?`)
-          .get(it.cardId, boardId);
+        const card = await prisma.card.findFirst({ where: { id: it.cardId, list: { boardId } } });
         if (!card) continue;
-        // update card fields
-        const fields: string[] = [];
-        const values: unknown[] = [];
-        if (it.title !== undefined) { fields.push("title = ?"); values.push(it.title); }
-        if (it.description !== undefined) { fields.push("description = ?"); values.push(it.description); }
-        if (it.dueDate !== undefined) { fields.push("due_date = ?"); values.push(it.dueDate); }
-        if (it.coverColor !== undefined) { fields.push("cover_color = ?"); values.push(it.coverColor); }
-        if (fields.length) {
-          fields.push("updated_at = datetime('now')");
-          values.push(it.cardId);
-          db.prepare(`UPDATE cards SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+        const data: any = {};
+        if (it.title !== undefined) data.title = it.title;
+        if (it.description !== undefined) data.description = it.description;
+        if (it.dueDate !== undefined) data.dueDate = new Date(it.dueDate);
+        if (it.coverColor !== undefined) data.coverColor = it.coverColor;
+        if (Object.keys(data).length) {
+          data.updatedAt = new Date();
+          await prisma.card.update({ where: { id: it.cardId }, data });
         }
         if (it.labelIds) {
           for (const lid of it.labelIds) {
-            db.prepare("INSERT OR IGNORE INTO card_labels (card_id, label_id) VALUES (?, ?)").run(it.cardId, lid);
+            await prisma.cardLabel.upsert({ where: { cardId_labelId: { cardId: it.cardId, labelId: lid } }, create: { cardId: it.cardId, labelId: lid }, update: {} });
           }
         }
         if (it.checklistTitle) {
-          const max = db.prepare("SELECT COALESCE(MAX(position), -1) AS m FROM checklists WHERE card_id = ?").get(it.cardId) as { m: number };
-          const r = db.prepare("INSERT INTO checklists (card_id, title, position) VALUES (?, ?, ?)").run(it.cardId, it.checklistTitle, max.m + 1);
-          const clId = Number(r.lastInsertRowid);
+          const max = await prisma.checklist.aggregate({ where: { cardId: it.cardId }, _max: { position: true } });
+          const cl = await prisma.checklist.create({ data: { cardId: it.cardId, title: it.checklistTitle, position: (max._max.position ?? -1) + 1 } });
           if (it.checklistItems) {
             let pos = 0;
             for (const t of it.checklistItems) {
-              db.prepare("INSERT INTO checklist_items (checklist_id, text, position) VALUES (?, ?, ?)").run(clId, t, pos++);
+              await prisma.checklistItem.create({ data: { checklistId: cl.id, text: t, position: pos++ } });
             }
           }
         }
-        if (it.comment) {
-          db.prepare("INSERT INTO comments (card_id, user_id, text) VALUES (?, ?, ?)").run(it.cardId, userId, it.comment);
-        }
-        if (it.attachmentName && it.attachmentUrl) {
-          db.prepare("INSERT INTO attachments (card_id, name, url) VALUES (?, ?, ?)").run(it.cardId, it.attachmentName, it.attachmentUrl);
-        }
-        if (it.memberId !== undefined) {
-          db.prepare("INSERT OR IGNORE INTO card_members (card_id, user_id) VALUES (?, ?)").run(it.cardId, it.memberId);
-        }
+        if (it.comment) await prisma.comment.create({ data: { cardId: it.cardId, userId, text: it.comment } });
+        if (it.attachmentName && it.attachmentUrl) await prisma.attachment.create({ data: { cardId: it.cardId, name: it.attachmentName, url: it.attachmentUrl } });
+        if (it.memberId !== undefined) await prisma.cardMember.upsert({ where: { cardId_userId: { cardId: it.cardId, userId: it.memberId } }, create: { cardId: it.cardId, userId: it.memberId }, update: {} });
         count++;
       }
       return `Заполнено полей у ${count} карточек.`;
@@ -715,10 +606,7 @@ async function executeTool(
     case "web_search": {
       const query = z.string().trim().min(1).max(200).parse(args.query);
       try {
-        const res = await fetch(
-          `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
-          { headers: { "User-Agent": "Mozilla/5.0" } },
-        );
+        const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, { headers: { "User-Agent": "Mozilla/5.0" } });
         if (!res.ok) return `Поиск недоступен (HTTP ${res.status}).`;
         const html = await res.text();
         const results: { title: string; url: string; snippet: string }[] = [];
@@ -731,9 +619,7 @@ async function executeTool(
           results.push({ title, url, snippet });
         }
         if (!results.length) return `По запросу "${query}" ничего не найдено.`;
-        return results
-          .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
-          .join("\n\n");
+        return results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join("\n\n");
       } catch (e) {
         return `Ошибка поиска: ${e instanceof Error ? e.message : String(e)}`;
       }
@@ -743,29 +629,27 @@ async function executeTool(
   }
 }
 
+
 export async function getChatHistory(boardId: number): Promise<ChatMessageDTO[]> {
   const session = await requireSession();
-  if (!ownedBoard(boardId, session.userId)) throw new Error("Доска не найдена");
-  const db = getDb();
-  const rows = db
-    .prepare(
-      "SELECT id, role, content, created_at FROM chat_messages WHERE board_id = ? AND user_id = ? AND role IN ('user','assistant') AND content IS NOT NULL ORDER BY id ASC",
-    )
-    .all(boardId, session.userId) as { id: number; role: string; content: string; created_at: string }[];
+  if (!(await ownedBoard(boardId, session.userId))) throw new Error("Доска не найдена");
+  const rows = await prisma.chatMessage.findMany({
+    where: { boardId, userId: session.userId, role: { in: ["user", "assistant"] }, content: { not: null } },
+    orderBy: { id: "asc" },
+    select: { id: true, role: true, content: true, createdAt: true },
+  });
   return rows.map((r) => ({
     id: r.id,
     role: r.role as "user" | "assistant",
-    content: r.content,
-    createdAt: r.created_at,
+    content: r.content as string,
+    createdAt: r.createdAt.toISOString(),
   }));
 }
 
 export async function clearChatHistory(boardId: number): Promise<void> {
   const session = await requireSession();
-  if (!ownedBoard(boardId, session.userId)) throw new Error("Доска не найдена");
-  getDb()
-    .prepare("DELETE FROM chat_messages WHERE board_id = ? AND user_id = ?")
-    .run(boardId, session.userId);
+  if (!(await ownedBoard(boardId, session.userId))) throw new Error("Доска не найдена");
+  await prisma.chatMessage.deleteMany({ where: { boardId, userId: session.userId } });
   revalidatePath(`/board/${boardId}`);
 }
 
@@ -774,7 +658,7 @@ export async function sendChatMessage(
   userText: string,
 ): Promise<{ reply: string }> {
   const session = await requireSession();
-  if (!ownedBoard(boardId, session.userId)) throw new Error("Доска не найдена");
+  if (!(await ownedBoard(boardId, session.userId))) throw new Error("Доска не найдена");
   return runChat(boardId, session.userId, userText);
 }
 
@@ -787,12 +671,12 @@ async function runChat(
   if (!parsed.success) throw new Error("Сообщение не может быть пустым");
   const text = parsed.data;
 
-  if (!ownedBoard(boardId, userId)) throw new Error("Доска не найдена");
+  if (!(await ownedBoard(boardId, userId))) throw new Error("Доска не найдена");
 
   const aiConfig = await getAiConfig(userId);
   if (!aiConfig.enabled) throw new Error("ИИ отключён в настройках профиля");
 
-  insertMessage(boardId, userId, "user", text);
+  await insertMessage(boardId, userId, "user", text);
 
   const system = `Ты — AI-ассистент внутри канбан-доски. Отвечай на русском языке.
 У тебя есть доступ ТОЛЬКО к текущей доске (id=${boardId}). Никогда не упоминай и не используй другие доски — их не существует для тебя.
@@ -806,21 +690,21 @@ async function runChat(
 ${await boardStateText(boardId)}`;
 
   // Build history from DB
-  const db = getDb();
-  const rows = db
-    .prepare(
-      "SELECT role, content, tool_calls, tool_call_id, name FROM chat_messages WHERE board_id = ? AND user_id = ? ORDER BY id ASC",
-    )
-    .all(boardId, userId) as {
-    role: string;
-    content: string | null;
-    tool_calls: string | null;
-    tool_call_id: string | null;
-    name: string | null;
-  }[];
+  const rows = await prisma.chatMessage.findMany({
+    where: { boardId, userId },
+    orderBy: { id: "asc" },
+    select: { role: true, content: true, toolCalls: true, toolCallId: true, name: true },
+  });
+  const mappedRows = rows.map((r) => ({
+    role: r.role,
+    content: r.content,
+    tool_calls: r.toolCalls,
+    tool_call_id: r.toolCallId,
+    name: r.name,
+  }));
 
   const history: OpenAIMessage[] = [];
-  for (const r of rows) {
+  for (const r of mappedRows) {
     if (r.role === "user") {
       history.push({ role: "user", content: r.content ?? "" });
     } else if (r.role === "assistant") {
@@ -849,7 +733,7 @@ ${await boardStateText(boardId)}`;
   for (let round = 0; round < 10; round++) {
     const assistant = await chatCompletion(messages, aiConfig);
     if (assistant.tool_calls && assistant.tool_calls.length) {
-      insertMessage(
+      await insertMessage(
         boardId,
         userId,
         "assistant",
@@ -872,7 +756,7 @@ ${await boardStateText(boardId)}`;
         } catch (e) {
           result = `Ошибка: ${e instanceof Error ? e.message : String(e)}`;
         }
-        insertMessage(boardId, userId, "tool", result, null, tc.id, tc.function.name);
+        await insertMessage(boardId, userId, "tool", result, null, tc.id, tc.function.name);
         messages.push({
           role: "tool",
           tool_call_id: tc.id,
@@ -882,7 +766,7 @@ ${await boardStateText(boardId)}`;
       }
     } else {
       finalReply = assistant.content ?? "Готово.";
-      insertMessage(boardId, userId, "assistant", finalReply);
+      await insertMessage(boardId, userId, "assistant", finalReply);
       messages.push({ role: "assistant", content: finalReply });
       break;
     }

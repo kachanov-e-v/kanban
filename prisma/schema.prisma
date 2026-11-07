@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  name          String
+  passwordHash  String   @map("password_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+  aiBaseUrl     String?  @map("ai_base_url")
+  aiModel       String?  @map("ai_model")
+  aiApiKey      String?  @map("ai_api_key")
+  aiEnabled     Boolean  @default(true) @map("ai_enabled")
+  aiProvider    String?  @map("ai_provider")
+
+  boards        Board[]
+  boardMembers  BoardMember[]
+  createdCards  Card[]   @relation("CardCreatedBy")
+  comments      Comment[]
+  chatMessages  ChatMessage[]
+  cardMemberships CardMember[]
+  activities    Activity[]
+
+  @@map("users")
+}
+
+model Board {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int      @map("owner_id")
+  title       String
+  description String?
+  background  String   @default("default")
+  isStarred   Boolean  @default(false) @map("is_starred")
+  isArchived  Boolean  @default(false) @map("is_archived")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     BoardMember[]
+  lists       List[]
+  labels      Label[]
+  activity    Activity[]
+  chatMessages ChatMessage[]
+
+  @@map("boards")
+}
+
+model BoardMember {
+  boardId Int    @map("board_id")
+  userId  Int    @map("user_id")
+  role    String @default("member")
+
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, userId])
+  @@map("board_members")
+}
+
+model List {
+  id         Int      @id @default(autoincrement())
+  boardId    Int      @map("board_id")
+  title      String
+  position   Int      @default(0)
+  isArchived Boolean  @default(false) @map("is_archived")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards      Card[]
+
+  @@map("lists")
+}
+
+model Label {
+  id      Int    @id @default(autoincrement())
+  boardId Int    @map("board_id")
+  name    String @default("")
+  color   String
+
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cardLabels CardLabel[]
+
+  @@map("labels")
+}
+
+model Card {
+  id         Int       @id @default(autoincrement())
+  listId     Int       @map("list_id")
+  title      String
+  description String?
+  position   Int       @default(0)
+  dueDate    DateTime? @map("due_date")
+  isArchived Boolean   @default(false) @map("is_archived")
+  coverColor String?   @map("cover_color")
+  createdById Int?     @map("created_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @default(now()) @map("updated_at")
+
+  list       List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdBy  User?     @relation("CardCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  labels     CardLabel[]
+  members    CardMember[]
+  checklists Checklist[]
+  comments   Comment[]
+  attachments Attachment[]
+
+  @@map("cards")
+}
+
+model CardLabel {
+  cardId  Int @map("card_id")
+  labelId Int @map("label_id")
+
+  card  Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, labelId])
+  @@map("card_labels")
+}
+
+model CardMember {
+  cardId Int @map("card_id")
+  userId Int @map("user_id")
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, userId])
+  @@map("card_members")
+}
+
+model Checklist {
+  id       Int    @id @default(autoincrement())
+  cardId   Int    @map("card_id")
+  title    String
+  position Int    @default(0)
+
+  card  Card            @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  items ChecklistItem[]
+
+  @@map("checklists")
+}
+
+model ChecklistItem {
+  id          Int     @id @default(autoincrement())
+  checklistId Int     @map("checklist_id")
+  text        String
+  isChecked   Boolean @default(false) @map("is_checked")
+  position    Int     @default(0)
+
+  checklist Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  @@map("checklist_items")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  cardId    Int      @map("card_id")
+  userId    Int      @map("user_id")
+  text      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  cardId    Int      @map("card_id")
+  name      String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  boardId   Int      @map("board_id")
+  userId    Int?     @map("user_id")
+  type      String
+  data      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("activity")
+}
+
+model ChatMessage {
+  id          Int      @id @default(autoincrement())
+  boardId     Int      @map("board_id")
+  userId      Int      @map("user_id")
+  role        String
+  content     String?
+  toolCalls   String?  @map("tool_calls")
+  toolCallId  String?  @map("tool_call_id")
+  name        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+  @@index([boardId])
+}
