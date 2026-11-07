@@ -118,16 +118,13 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
       role="region"
       aria-labelledby={`list-title-${list.id}`}
     >
-      <div
-        className="relative cursor-grab px-3 py-2.5 touch-none"
-        {...attributes}
-        {...listeners}
-        suppressHydrationWarning
-      >
+      <div className="relative px-3 py-2.5">
         <button
           type="button"
-          className="absolute left-2 top-2 z-10 rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute left-2 top-2 cursor-grab touch-none rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Переместить список"
+          {...attributes}
+          {...listeners}
           suppressHydrationWarning
         >
           <GripVertical className="h-4 w-4" />
@@ -135,14 +132,13 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface break-words pl-8 pr-24">
           {list.title}
         </h3>
-        <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
+        <div className="absolute right-2 top-2 flex items-center gap-1">
           <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border-[2px] border-outline">
             {list.cards.length}
           </span>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               setEditTitle(list.title);
               setEditOpen(true);
             }}
@@ -153,10 +149,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
           </button>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleArchive();
-            }}
+            onClick={handleArchive}
             aria-label="Архивировать список"
             className="rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
@@ -164,10 +157,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
           </button>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete();
-            }}
+            onClick={handleDelete}
             aria-label="Удалить список"
             className="rounded p-1 text-on-surface-variant hover:text-error hover:bg-error/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
