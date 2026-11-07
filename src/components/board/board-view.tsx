@@ -251,7 +251,7 @@ export function BoardView({ initial }: { initial: BoardDetailDTO }) {
   }
 
   return (
-    <div className="flex h-full flex-col" style={bgStyle(data.board.background)}>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden" style={bgStyle(data.board.background)}>
       <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 bg-surface border-b-[3px] border-outline">
         <h1 className="type-title-large text-on-surface truncate">{data.board.title}</h1>
         <div className="flex items-center gap-2">

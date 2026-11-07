@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background overflow-hidden">
       <header className="sticky top-0 z-30 flex items-center justify-between gap-4 bg-surface border-b-[3px] border-outline px-4 py-3 sm:px-6">
         <div className="flex items-center gap-4">
           <Link href="/boards" className="type-title-large text-on-surface">
@@ -42,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </form>
         </div>
       </header>
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }
