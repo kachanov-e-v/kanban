@@ -261,8 +261,19 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "web_search",
+      description: "Поиск информации в интернете по запросу.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string" } },
+        required: ["query"],
+      },
+    },
+  },
 ];
-
 function ownedBoard(boardId: number, userId: number): boolean {
   const db = getDb();
   const row = db
@@ -701,6 +712,32 @@ async function executeTool(
       }
       return `Заполнено полей у ${count} карточек.`;
     }
+    case "web_search": {
+      const query = z.string().trim().min(1).max(200).parse(args.query);
+      try {
+        const res = await fetch(
+          `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+          { headers: { "User-Agent": "Mozilla/5.0" } },
+        );
+        if (!res.ok) return `Поиск недоступен (HTTP ${res.status}).`;
+        const html = await res.text();
+        const results: { title: string; url: string; snippet: string }[] = [];
+        const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+        let m;
+        while ((m = re.exec(html)) !== null && results.length < 5) {
+          const url = m[1];
+          const title = m[2].replace(/<[^>]+>/g, "").trim();
+          const snippet = m[3].replace(/<[^>]+>/g, "").trim();
+          results.push({ title, url, snippet });
+        }
+        if (!results.length) return `По запросу "${query}" ничего не найдено.`;
+        return results
+          .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
+          .join("\n\n");
+      } catch (e) {
+        return `Ошибка поиска: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }
     default:
       return `Неизвестный инструмент: ${name}`;
   }
@@ -759,7 +796,7 @@ async function runChat(
 
   const system = `Ты — AI-ассистент внутри канбан-доски. Отвечай на русском языке.
 У тебя есть доступ ТОЛЬКО к текущей доске (id=${boardId}). Никогда не упоминай и не используй другие доски — их не существует для тебя.
-Ты можешь отвечать на общие вопросы (в том числе про погоду через get_weather) и управлять текущей доской: создавать/обновлять списки и карточки (название, описание, срок, цвет), перемещать/архивировать/удалять карточки, создавать и привязывать метки, добавлять комментарии, чек-листы и пункты, вложения, назначать участников.
+Ты можешь отвечать на общие вопросы (в том числе про погоду через get_weather и искать информацию в интернете через web_search) и управлять текущей доской: создавать/обновлять списки и карточки (название, описание, срок, цвет), перемещать/архивировать/удалять карточки, создавать и привязывать метки, добавлять комментарии, чек-листы и пункты, вложения, назначать участников.
 Когда пользователь просит создать "список карточек" — создай список (колонку) и/или карточки в подходящем списке. Если списка нет — сначала создай список, затем карточки.
 Перед действиями используй актуальное состояние доски ниже. ID списков/карточек бери из него.
 Если пользователь просит заполнить все поля карточек — самостоятельно и без уточнений заполни их тестовыми данными: описание, срок, цвет обложки, метки (создай при необходимости), чек-лист с пунктами, комментарий, вложение, участника. Используй ID из состояния доски и результатов инструментов.
