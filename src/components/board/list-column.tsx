@@ -118,7 +118,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
       role="region"
       aria-labelledby={`list-title-${list.id}`}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
         <button
           type="button"
           className="cursor-grab touch-none rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -129,7 +129,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface flex-1 break-words">
+        <h3 id={`list-title-${list.id}`} className="type-title-medium text-on-surface min-w-0 flex-1 break-words">
           {list.title}
         </h3>
         <span className="type-label-medium text-on-surface rounded-radius-sm bg-primary-container px-2 py-0.5 border-[2px] border-outline">
@@ -142,7 +142,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
             setEditOpen(true);
           }}
           aria-label="Редактировать список"
-          className="rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="shrink-0 rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -150,7 +150,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
           type="button"
           onClick={handleArchive}
           aria-label="Архивировать список"
-          className="rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="shrink-0 rounded p-1 text-on-surface-variant hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Archive className="h-3.5 w-3.5" />
         </button>
@@ -158,7 +158,7 @@ export function ListColumn({ list, onMutate, onCardClick }: ListColumnProps) {
           type="button"
           onClick={handleDelete}
           aria-label="Удалить список"
-          className="rounded p-1 text-on-surface-variant hover:text-error hover:bg-error/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="shrink-0 rounded p-1 text-on-surface-variant hover:text-error hover:bg-error/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
